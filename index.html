@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VEYA · שיחת היכרות</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+<svg width="26" height="26" viewBox="-9 -1 139.4 140.2" aria-hidden="true"><clipPath id="lc"><rect x="-60" y="0" width="320" height="320"/></clipPath><g fill="none" stroke-width="7" clip-path="url(#lc)"><path d="M-2.8 -8 L60.7 130.2 L124.2 -8" stroke="#F8F6F2"/><path d="M8.9 -8 L60.7 105 L112.5 -8" stroke="#A8C3B0"/></g></svg>
+<span class="word">VEYA</span>
+</header>
+<main class="wrap">
+  <section id="pick">
+    <h1>שיחת היכרות עם VEYA</h1>
+    <p class="lead">בחרו זמן שנוח לכם. השיחה בווידאו, ונכיר את העסק שלכם ואת הפלטפורמה שאנחנו בונים לזוגות.</p>
+    <div class="meta"><span class="pill">עד 40 דקות</span><span class="pill">שיחת וידאו בזום</span></div>
+    <p class="note">השיחה מוקלטת, כדי שנוכל לחזור לפרטים בלי לרשום תוך כדי.</p>
+    <div id="days"><p class="empty">טוען זמנים פנויים…</p></div>
+    <form id="f" novalidate>
+      <div class="chosen" id="chosen"></div>
+      <div class="row">
+        <div><label for="n">שם מלא</label><input id="n" autocomplete="name" required></div>
+        <div><label for="b">שם העסק</label><input id="b" autocomplete="organization"></div>
+      </div>
+      <div class="row">
+        <div><label for="p">טלפון (וואטסאפ)</label><input id="p" type="tel" autocomplete="tel" inputmode="tel" required></div>
+        <div><label for="e">מייל</label><input id="e" type="email" autocomplete="email" inputmode="email" dir="ltr" style="text-align:right" required></div>
+      </div>
+      <label for="t">משהו שכדאי שנדע לפני השיחה? (לא חובה)</label><textarea id="t" rows="2"></textarea>
+      <p class="err" id="err"></p>
+      <button class="btn" id="go" type="submit">קביעת השיחה</button>
+    </form>
+  </section>
+  <section class="done" id="done">
+    <h2>השיחה נקבעה</h2>
+    <p>תודה, נדבר בקרוב.</p>
+    <div class="when" id="when"></div>
+    <div class="acts">
+      <a class="btn" id="join" target="_blank" rel="noopener">הקישור לשיחה</a>
+      <a class="btn ghost" id="gcal" target="_blank" rel="noopener">הוספה ליומן גוגל</a>
+      <a class="btn ghost" id="ics" download="veya.ics">הוספה ליומן אחר</a>
+    </div>
+    <p class="foot" id="nolink" style="display:none">הקישור לזום יישלח אליכם בוואטסאפ לפני השיחה.</p>
+    <p class="foot">אם משהו משתנה, כתבו לנו בוואטסאפ ונמצא זמן אחר.</p>
+  </section>
+  <p class="foot">VEYA · תכנון חתונה</p>
+</main>
+<script>
+const SB="https://qafmusyzzntfiknwgpwb.supabase.co", KEY="sb_publishable_pHWyVASVelu5P_Mp6CXOmQ_2dC92YGC";
+const H={"apikey":KEY,"Content-Type":"application/json"};
+const $=s=>document.querySelector(s);
+const DAYS=["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+const TZ="Asia/Jerusalem";
+const fmt=(d,o)=>new Intl.DateTimeFormat("he-IL",{timeZone:TZ,...o}).format(d);
+const dayKey=d=>fmt(d,{year:"numeric",month:"2-digit",day:"2-digit"});
+const hm=d=>fmt(d,{hour:"2-digit",minute:"2-digit",hour12:false});
+const dname=d=>"יום "+fmt(d,{weekday:"long"}).replace("יום ","");
+const dd=d=>fmt(d,{day:"numeric",month:"numeric"});
+let sel=null;
+async function rpc(fn,body){const r=await fetch(SB+"/rest/v1/rpc/"+fn,{method:"POST",headers:H,body:JSON.stringify(body||{})});if(!r.ok)throw new Error(r.status);return r.json();}
+async function load(){
+  let rows;try{rows=await rpc("outreach_free_slots");}catch(e){$("#days").innerHTML='<p class="empty">לא הצלחנו לטעון את הזמנים. נסו לרענן בעוד רגע.</p>';return;}
+  if(!rows.length){$("#days").innerHTML='<p class="empty">כרגע אין זמנים פנויים. זמנים חדשים נפתחים כל שבוע.</p>';$("#f").classList.remove("show");return;}
+  const g={};rows.forEach(r=>{const d=new Date(r.starts_at);(g[dayKey(d)]=g[dayKey(d)]||[]).push({id:r.id,d});});
+  $("#days").innerHTML=Object.values(g).map(arr=>`<div class="day"><div class="dh"><span class="dname">${dname(arr[0].d)}</span><span class="ddate">${dd(arr[0].d)}</span></div><div class="slots">${arr.map(s=>`<button type="button" class="slot${sel&&sel.id===s.id?" on":""}" data-id="${s.id}" data-t="${s.d.toISOString()}">${hm(s.d)}</button>`).join("")}</div></div>`).join("");
+  document.querySelectorAll(".slot").forEach(b=>b.onclick=()=>{sel={id:b.dataset.id,d:new Date(b.dataset.t)};document.querySelectorAll(".slot").forEach(x=>x.classList.toggle("on",x===b));$("#chosen").textContent=`${dname(sel.d)}, ${dd(sel.d)} בשעה ${hm(sel.d)}`;$("#f").classList.add("show");$("#err").textContent="";$("#n").focus({preventScroll:true});$("#f").scrollIntoView({behavior:"smooth",block:"center"});});
+}
+function pad(n){return String(n).padStart(2,"0")}
+function utc(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+"T"+pad(d.getUTCHours())+pad(d.getUTCMinutes())+"00Z"}
+$("#f").onsubmit=async e=>{e.preventDefault();const n=$("#n").value.trim(),p=$("#p").value.trim(),em=$("#e").value.trim();
+  if(!sel){$("#err").textContent="בחרו קודם זמן.";return}
+  if(!n||p.replace(/\D/g,"").length<9||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){$("#err").textContent="צריך שם, טלפון ומייל כדי שנוכל לחזור אליכם.";return}
+  $("#go").disabled=true;$("#err").textContent="";
+  let r;try{r=(await rpc("outreach_book",{p_slot:sel.id,p_name:n,p_business:$("#b").value.trim(),p_phone:p,p_email:em,p_note:$("#t").value.trim()}))[0];}catch(e){r=null}
+  if(!r||!r.ok){$("#err").textContent="הזמן הזה כבר נתפס. בחרו זמן אחר.";$("#go").disabled=false;sel=null;$("#f").classList.remove("show");load();return}
+  const d=new Date(r.starts_at),end=new Date(d.getTime()+40*60000),url=r.meet_url||"";
+  $("#when").textContent=`${dname(d)}, ${dd(d)} בשעה ${hm(d)}`;
+  const j=$("#join");if(url){j.href=url}else{j.style.display="none";$("#nolink").style.display="block"}
+  const title="שיחת היכרות עם VEYA",desc="שיחת היכרות עם בר מ־VEYA"+(url?"\n"+url:"");
+  $("#gcal").href="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+utc(d)+"/"+utc(end)+"&details="+encodeURIComponent(desc)+(url?"&location="+encodeURIComponent(url):"");
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//VEYA//meet//HE","BEGIN:VEVENT","UID:"+sel.id+"@veya","DTSTAMP:"+utc(new Date()),"DTSTART:"+utc(d),"DTEND:"+utc(end),"SUMMARY:"+title,"DESCRIPTION:"+desc.replace(/\n/g,"\\n"),url?"LOCATION:"+url:"","END:VEVENT","END:VCALENDAR"].filter(Boolean).join("\r\n");
+  $("#ics").href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  $("#pick").style.display="none";$("#done").classList.add("show");window.scrollTo(0,0);};
+load();
+</script>
+</body>
+</html>
