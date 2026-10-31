@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VEYA · פרטי העסק</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="pf">
+<header class="top">
+<svg width="26" height="26" viewBox="-9 -1 139.4 140.2" aria-hidden="true"><clipPath id="lc"><rect x="-60" y="0" width="320" height="320"/></clipPath><g fill="none" stroke-width="7" clip-path="url(#lc)"><path d="M-2.8 -8 L60.7 130.2 L124.2 -8" stroke="#F8F6F2"/><path d="M8.9 -8 L60.7 105 L112.5 -8" stroke="#A8C3B0"/></g></svg>
+<span class="word">VEYA</span>
+</header>
+<main class="wrap">
+ <div id="bad" class="empty" style="display:none">הקישור לא תקין. כתבו לנו בוואטסאפ ונשלח קישור חדש.</div>
+ <form id="f" novalidate style="display:none">
+  <h1 id="hi">היי</h1>
+  <p class="lead">תודה על השיחה. כאן אפשר לרכז את כל מה שחשוב שנדע על העסק. אין צורך למלא הכל, ואפשר לחזור לאותו קישור ולעדכן בכל זמן.</p>
+  <section class="card"><h2 class="g">העסק</h2>
+   <div class="row"><div><label for="business">שם העסק</label><input id="business"></div><div><label for="field">תחום</label><input id="field" placeholder="צילום, איפור, DJ…"></div></div>
+   <div class="row"><div><label for="email">מייל</label><input id="email" type="email" dir="ltr" style="text-align:right"></div><div><label for="phone">טלפון</label><input id="phone" type="tel"></div></div>
+   <div class="row"><div><label for="areas">אזורים שבהם אתם עובדים</label><input id="areas" placeholder="מרכז, שרון, כל הארץ…"></div><div><label for="years">כמה שנים בתחום</label><input id="years" inputmode="numeric"></div></div>
+  </section>
+  <section class="card"><h2 class="g">קישורים</h2>
+   <div class="row"><div><label for="instagram">אינסטגרם</label><input id="instagram" type="url" placeholder="instagram.com/…"></div><div><label for="tiktok">טיקטוק</label><input id="tiktok" type="url" placeholder="tiktok.com/@…"></div></div>
+   <div class="row"><div><label for="facebook">פייסבוק</label><input id="facebook" type="url"></div><div><label for="website">אתר</label><input id="website" type="url"></div></div>
+   <label for="portfolio">תיק עבודות (קישור לגלריה, דרייב או אתר)</label><input id="portfolio" type="url">
+  </section>
+  <section class="card"><h2 class="g">מחירים וחבילות</h2>
+   <label for="prices">החבילות והמחירים שלכם, במילים שלכם</label><textarea id="prices" rows="4"></textarea>
+   <label class="file" id="drop"><input id="up" type="file" multiple accept=".pdf,image/*">העלאת מחירון או קבצים (PDF או תמונה, עד 10MB)</label>
+   <ul class="flist" id="files"></ul>
+  </section>
+  <section class="card"><h2 class="g">איך עובדים איתכם</h2>
+   <label for="process">איך התהליך עובד מהפנייה הראשונה ועד יום האירוע</label><textarea id="process" rows="4"></textarea>
+   <label for="client_msg">ההודעה שאתם שולחים לזוג שפונה אליכם (אפשר להדביק כמו שהיא)</label><textarea id="client_msg" rows="4"></textarea>
+   <label for="notes">עוד משהו שחשוב לכם שנדע</label><textarea id="notes" rows="3"></textarea>
+  </section>
+  <div class="bar"><button class="btn" id="go" type="submit">שמירה</button><span class="ok" id="ok"></span><span class="err" id="err"></span></div>
+ </form>
+ <p class="foot">VEYA · תכנון חתונה</p>
+</main>
+<script>
+const SB="https://qafmusyzzntfiknwgpwb.supabase.co",KEY="sb_publishable_pHWyVASVelu5P_Mp6CXOmQ_2dC92YGC";
+const H={"apikey":KEY,"Content-Type":"application/json"};
+const $=s=>document.querySelector(s);
+const F=["business","field","email","phone","areas","years","instagram","tiktok","facebook","website","portfolio","prices","process","client_msg","notes"];
+const tok=new URLSearchParams(location.search).get("k")||"";
+let files=[];
+async function rpc(fn,b){const r=await fetch(SB+"/rest/v1/rpc/"+fn,{method:"POST",headers:H,body:JSON.stringify(b)});if(!r.ok)throw new Error(r.status);return r.json();}
+function drawFiles(){$("#files").innerHTML=files.map((f,i)=>`<li><a href="${SB}/storage/v1/object/public/outreach-files/${f.path}" target="_blank" rel="noopener">${f.name.replace(/</g,"&lt;")}</a><button type="button" class="btn ghost" style="padding:2px 10px;font-size:14px" data-i="${i}">הסרה</button></li>`).join("");document.querySelectorAll("#files button").forEach(b=>b.onclick=()=>{files.splice(+b.dataset.i,1);drawFiles();});}
+async function init(){
+ if(!/^[a-z0-9]{20,40}$/.test(tok)){$("#bad").style.display="block";return}
+ let r;try{r=(await rpc("outreach_profile_get",{p_token:tok}))[0]}catch(e){}
+ if(!r){$("#bad").style.display="block";return}
+ const d=r.data||{};$("#hi").textContent="היי "+(r.name||"").split(" ")[0];
+ F.forEach(k=>{$("#"+k).value=d[k]||(k==="phone"?r.phone||"":k==="business"?r.business||"":k==="email"?r.email||"":"")});
+ files=Array.isArray(d.files)?d.files:[];drawFiles();$("#f").style.display="block";
+}
+$("#up").onchange=async e=>{for(const f of e.target.files){
+  if(f.size>10*1024*1024){$("#err").textContent=f.name+" גדול מ־10MB";continue}
+  const path=tok+"/"+Date.now()+"-"+Math.random().toString(36).slice(2,8)+"."+(f.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");
+  $("#ok").textContent="מעלה את "+f.name+"…";
+  const r=await fetch(SB+"/storage/v1/object/outreach-files/"+path,{method:"POST",headers:{"apikey":KEY,"Content-Type":f.type||"application/octet-stream"},body:f});
+  if(r.ok){files.push({name:f.name,path});drawFiles();$("#ok").textContent="הקובץ עלה. לחצו שמירה כדי לשמור."}else{$("#err").textContent="ההעלאה לא הצליחה"}}
+  e.target.value="";};
+$("#f").onsubmit=async e=>{e.preventDefault();$("#go").disabled=true;$("#err").textContent="";$("#ok").textContent="";
+ const d={files};F.forEach(k=>d[k]=$("#"+k).value.trim());
+ try{const r=await rpc("outreach_profile_save",{p_token:tok,p_data:d});if(r!==true&&!(r&&r[0]))throw 0;$("#ok").textContent="נשמר. תודה, אפשר לחזור לכאן ולעדכן בכל זמן."}catch(x){$("#err").textContent="השמירה לא הצליחה, נסו שוב בעוד רגע."}
+ $("#go").disabled=false;};
+init();
+</script>
+</body>
+</html>
