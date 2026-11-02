@@ -29,7 +29,7 @@
       </div>
       <div class="row">
         <div><label for="p">טלפון (וואטסאפ)</label><input id="p" type="tel" autocomplete="tel" inputmode="tel" required></div>
-        <div><label for="e">מייל</label><input id="e" type="email" autocomplete="email" inputmode="email" dir="ltr" style="text-align:right" required></div>
+        <div><label for="e">מייל</label><input id="e" type="email" placeholder="name@gmail.com" autocomplete="email" inputmode="email" dir="ltr" style="text-align:right" required></div>
       </div>
       <label for="t">משהו שכדאי שנדע לפני השיחה? (לא חובה)</label><textarea id="t" rows="2"></textarea>
       <p class="err" id="err"></p>
@@ -74,7 +74,9 @@ function pad(n){return String(n).padStart(2,"0")}
 function utc(d){return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+"T"+pad(d.getUTCHours())+pad(d.getUTCMinutes())+"00Z"}
 $("#f").onsubmit=async e=>{e.preventDefault();const n=$("#n").value.trim(),p=$("#p").value.trim(),em=$("#e").value.trim();
   if(!sel){$("#err").textContent="בחרו קודם זמן.";return}
-  if(!n||p.replace(/\D/g,"").length<9||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){$("#err").textContent="צריך שם, טלפון ומייל כדי שנוכל לחזור אליכם.";return}
+  if(!n){$("#err").textContent="חסר שם.";$("#n").focus();return}
+  if(p.replace(/\D/g,"").length<9){$("#err").textContent="מספר הטלפון קצר מדי. בדקו שהוא מלא.";$("#p").focus();return}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){$("#err").textContent="כתובת המייל לא תקינה. היא צריכה להיראות כך: name@gmail.com (עם @). אליה נשלח את הקישור לזום.";$("#e").focus();return}
   $("#go").disabled=true;$("#err").textContent="";
   let r;try{r=(await rpc("outreach_book",{p_slot:sel.id,p_name:n,p_business:$("#b").value.trim(),p_phone:p,p_email:em,p_note:$("#t").value.trim()}))[0];}catch(e){r=null}
   if(!r||!r.ok){$("#err").textContent="הזמן הזה כבר נתפס. בחרו זמן אחר.";$("#go").disabled=false;sel=null;$("#f").classList.remove("show");load();return}
